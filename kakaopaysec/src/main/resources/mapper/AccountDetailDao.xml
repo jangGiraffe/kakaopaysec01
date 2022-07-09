@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kakaopaysec.dao.AccountDetailMapper">
+
+	<insert id="insertAccountDetail" parameterType="AccountDetailVo">
+		insert into accountInfo(accountNo,status,date,amount)
+		values(#{accountNo},#{status},#{date},#{amount})
+	</insert>
+
+	<select id="getAccountDetailList" resultType="java.util.HashMap">
+		select * 
+		from accountInfo 
+		where accountNo=#{accountNo}
+	</select>
+	
+	<select id="getAccountBalance" parameterType="String" resultType="java.util.HashMap">
+		select accountNo,sum(sumAmount)
+		from (
+			select 
+				aif.accountNo,
+				aif.status,
+				(case 
+				when status='N' THEN sum(convert(aif.amount,double)) *-1
+				ELSE sum(convert(aif.amount,double))
+				END) sumAmount
+			from 
+				accountinfo aif
+				inner join account ac on aif.accountno = ac.accountno
+				inner join user u on ac.userId=u.userId
+			where ac.userId=#{userId}
+			group by aif.accountNo,aif.status
+			)
+		group by accountno
+	</select>
+	
+	<select id="getAvgBalancebyAge" resultType="java.util.HashMap">
+		select age||'0대' as age,round(avg(amount),0) as avgAmt 
+		from 
+			(select accountno,age,sum(sumamount) as amount 
+			from 
+				(select 
+						aif.accountNo,
+						(case 
+						when status='N' THEN sum(convert(aif.amount,double)) *-1
+						ELSE sum(convert(aif.amount,double))
+						END) sumAmount,
+		                                substr(u.userage,1,1) as age
+					from 
+						accountinfo aif
+						inner join account ac on aif.accountno = ac.accountno
+						inner join user u on ac.userId=u.userId
+					group by aif.accountNo,aif.status
+			)group by accountno
+		)group by age
+	</select>
+	
+	<select id="getTotalAnuualBalance" parameterType="String" resultType="String">
+		select 
+			NVL(sum(
+				(case 
+					when status='N' THEN convert(amount,decimal) *-1
+					ELSE convert(amount,decimal)
+				END)
+			),0) amount
+		from accountinfo 
+		where date between #{date}||'-01-01' and #{date}||'-12-31'
+	</select>
+	
+	<select id="getTotalBalanceOfUser" parameterType="String" resultType="java.util.HashMap">
+		select userId,sum(sumAmount) from 
+			(select 
+				u.userId,
+				aif.status,
+				(case 
+					when status='N' THEN sum(convert(aif.amount,double)) *-1
+					ELSE sum(convert(aif.amount,double))
+				END) sumAmount
+			from 
+				accountinfo aif
+				inner join account ac on aif.accountno = ac.accountno
+				inner join user u on ac.userId=u.userId
+			where aif.date between #{startDate} and #{endDate}
+			group by u.userId,aif.status
+		order by u.userid)
+		group by userId
+		order by sum(sumamount) desc
+	</select>
+</mapper>

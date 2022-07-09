@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kakaopaysec.dao.AccountMapper">
+
+	<insert id="insertAccount" parameterType="AccountInfoVo">
+		insert into account(userId,accountNo)
+		values(#{userId},#{accountNo})
+	</insert>
+
+	<select id="getAccountList" parameterType="AccountInfoVo" resultType="java.util.HashMap">
+		select * 
+		from account 
+		where 1=1
+		<if test='userId != null'>
+			and userId = #{userId}
+		</if>
+		<if test='accountNo != null'>
+			and accountNo = #{accountNo}
+		</if>
+	</select>
+	
+	<select id="getNewAccountNo" resultType="String">
+		select max(substr(accountno,1,4)||substr(accountno,6,2))+1 
+		from account
+	</select>
+	
+	
+</mapper>

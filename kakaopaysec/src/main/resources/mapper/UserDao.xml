@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kakaopaysec.dao.UserMapper">
+
+	<insert id="insertUser" parameterType="UserVo">
+		insert into user(userId,userName,userAge,regDate)
+		values(#{userId},#{userName},#{userAge},#{regDate})
+	</insert>
+
+	<select id="getUser" parameterType="String" resultType="int">
+		select count(userId) 
+		from user
+		where userId = #{userId} 
+	</select>
+
+	<select id="getUserList" resultType="java.util.HashMap">
+		select * 
+		from user
+	</select>
+</mapper>
